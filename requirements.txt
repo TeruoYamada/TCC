@@ -1,5 +1,4 @@
 pandas
-geopandas
 requests
 matplotlib
 seaborn
@@ -9,3 +8,4 @@ streamlit-folium
 plotly
 geopandas 
 pyogrio
+
