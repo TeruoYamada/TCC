@@ -3,6 +3,7 @@ import pandas as pd
 import geopandas as gpd
 import json
 import requests
+import io
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
@@ -22,13 +23,22 @@ def obter_shapefile_municipios(cod_uf):
     url = f"https://servicodados.ibge.gov.br/api/v4/malhas/estados/{cod_uf}?formato=application/json&intrarregiao=Municipio&qualidade=intermediaria"
     response = requests.get(url)
     if response.status_code == 200:
-        municipios = gpd.read_file(response.text)
+        municipios = gpd.read_file(io.BytesIO(response.content))  # ← corrigido
         return municipios
     else:
         print("Erro:", response.status_code, response.text)
 
 
 def obter_municipios_por_estado(uf: str):
+    """
+    Obtém a lista de municípios de um estado específico com códigos IBGE
+
+    Parâmetros:
+    uf (str): Sigla da UF (ex: 'SP', 'RJ', 'MG')
+
+    Retorna:
+    DataFrame com colunas: ['codigo_ibge', 'municipio', 'uf']
+    """
     url = f"https://servicodados.ibge.gov.br/api/v1/localidades/estados/{uf}/municipios"
     response = requests.get(url)
     if response.status_code == 200:
@@ -46,22 +56,34 @@ def obter_municipios_por_estado(uf: str):
 
 # Título do APP
 st.title("🌍 Análise da Temperatura e da Precipitação por Município")
-st.markdown("Explore os dados climáticos de temperatura e precipitação dos municípios de Mato Grosso do Sul. 📊🌦️")
+st.markdown("Explore os dados climáticos de temperatura e precipitação de diferentes municípios de forma interativa. 📊🌦️")
 
-# Fixar estado como Mato Grosso do Sul
-uf_selecionado = 'MS'
-cod_uf = '50'
+# Dicionários de códigos IBGE
+dict_uf = {'MT': '51', 'SP': '35', 'RJ': '33', 'MG': '31', 'AM': '13', 'PA': '15',
+           'BA': '29', 'RS': '43', 'PR': '41', 'SC': '42', 'GO': '52', 'MS': '50',
+           'TO': '17', 'RO': '11', 'AC': '12', 'RR': '14', 'AP': '16', 'MA': '21',
+           'PI': '22', 'CE': '23', 'RN': '24', 'PB': '25', 'PE': '26', 'AL': '27',
+           'SE': '28', 'DF': '53', 'ES': '32'}
 
-# Obter o shapefile do MS
-gdf = obter_shapefile_municipios(cod_uf)
+# Criando um selectbox para escolher o estado
+uf_selecionado = st.sidebar.selectbox("Escolha o Estado:", dict_uf.keys())
+
+# Obter o shapefile
+gdf = obter_shapefile_municipios(dict_uf[uf_selecionado])
 
 # Setar o CRS
 gdf = gdf.set_crs(epsg=4674)
 
-# Obter municípios do MS
+# Obter municípios do estado selecionado
 df_mun = obter_municipios_por_estado(uf_selecionado)
 
-# Criando um selectbox para escolher a cidade (79 municípios em ordem alfabética)
+# Nomes municípios
+municipios = df_mun['municipio'].values
+
+# Para criar um dicionário de código -> nome:
+dict_mun = dict(zip(df_mun['codigo_ibge'], df_mun['municipio']))
+
+# Criando um selectbox para escolher a cidade
 cidade_selecionada = st.sidebar.selectbox("Escolha uma cidade:", sorted(df_mun['municipio']))
 
 # Selecionar o código IBGE da cidade a partir da cidade_selecionada
@@ -153,6 +175,9 @@ if isinstance(data_range, tuple) and len(data_range) == 2:
     # --- Gráfico de Precipitação ---
     dfp = df_sum.reset_index()
 
+    paleta_seaborn = sns.light_palette("blue", n_colors=dfp["year"].nunique(), as_cmap=False)
+    paleta_plotly = [mcolors.to_hex(color) for color in paleta_seaborn]
+
     fig = px.line(
         dfp, x="month", y="prec", color="year",
         markers=True, title="Precipitação Mensal por Ano",
@@ -176,6 +201,9 @@ if isinstance(data_range, tuple) and len(data_range) == 2:
 
     # --- Gráfico de Temperatura ---
     dft = df_mean.reset_index()
+
+    paleta_seaborn = sns.light_palette("blue", n_colors=dft["year"].nunique(), as_cmap=False)
+    paleta_plotly = [mcolors.to_hex(color) for color in paleta_seaborn]
 
     fig = px.line(
         dft, x="month", y="temp", color="year",
