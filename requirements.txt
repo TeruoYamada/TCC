@@ -1,7 +1,9 @@
 pandas
 geopandas
-plotly
-folium
-streamlit_folium
-seaborn
+requests
 matplotlib
+seaborn
+streamlit
+folium
+streamlit-folium
+plotly
