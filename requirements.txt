@@ -9,5 +9,8 @@ folium
 streamlit-folium
 plotly
 pyogrio
+scipy 
+branca 
+pykrige
 
 
