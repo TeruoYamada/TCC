@@ -12,5 +12,7 @@ pyogrio
 scipy 
 branca 
 pykrige
+prophet
+
 
 
