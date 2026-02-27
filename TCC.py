@@ -592,7 +592,7 @@ with st.sidebar:
             help="Controla como a correlação espacial decai com a distância.",
         )
 
-    gerar_mancha = st.button("🌧️ Gerar Mancha de Precipitação", use_container_width=True)
+    gerar_mancha = st.button("🌧️ Gerar Mancha de Precipitação", width="stretch")
 
 # ── Validações ────────────────────────────────────────────────────────────────
 if not (isinstance(data_range, tuple) and len(data_range) == 2):
@@ -659,7 +659,7 @@ with tab1:
         icon=folium.Icon(color="blue", icon="info-sign"),
     ).add_to(mapa_base)
 
-    st_folium(mapa_base, use_container_width=True, height=500)
+    st_folium(mapa_base, width="stretch", height=500)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ABA 2 — ANÁLISE CLIMÁTICA
@@ -696,7 +696,7 @@ with tab2:
         legend_title="Ano",
         template="plotly_white",
     )
-    st.plotly_chart(fig_prec, use_container_width=True)
+    st.plotly_chart(fig_prec, width="stretch")
 
     # ── Temperatura ───────────────────────────────────────────────────────────
     fig_temp = px.line(
@@ -715,7 +715,7 @@ with tab2:
         legend_title="Ano",
         template="plotly_white",
     )
-    st.plotly_chart(fig_temp, use_container_width=True)
+    st.plotly_chart(fig_temp, width="stretch")
 
     # ── Boxplot mensal ─────────────────────────────────────────────────────────
     st.markdown("---")
@@ -734,7 +734,7 @@ with tab2:
             color_discrete_sequence=["#1565c0"],
         )
         fig_box_p.update_layout(template="plotly_white", xaxis_title="Mês", yaxis_title="mm/dia")
-        st.plotly_chart(fig_box_p, use_container_width=True)
+        st.plotly_chart(fig_box_p, width="stretch")
 
     with col_box2:
         fig_box_t = px.box(
@@ -743,7 +743,7 @@ with tab2:
             color_discrete_sequence=["#c62828"],
         )
         fig_box_t.update_layout(template="plotly_white", xaxis_title="Mês", yaxis_title="°C")
-        st.plotly_chart(fig_box_t, use_container_width=True)
+        st.plotly_chart(fig_box_t, width="stretch")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ABA 3 — MANCHA DE PRECIPITAÇÃO
@@ -784,7 +784,7 @@ with tab3:
                 df_pontos.style.format({
                     "Latitude": "{:.4f}", "Longitude": "{:.4f}", "Precipitação (mm)": "{:.1f}"
                 }).background_gradient(subset=["Precipitação (mm)"], cmap="Blues"),
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
 
@@ -798,7 +798,7 @@ with tab3:
                 variogram_model=variogram_model,
             )
 
-        st_folium(mapa_interp, use_container_width=True, height=580)
+        st_folium(mapa_interp, width="stretch", height=580)
 
         # ── Estatísticas ──────────────────────────────────────────────────────
         precs = [p[2] for p in pontos]
@@ -842,7 +842,7 @@ with tab3:
                 yaxis_title="Semivariância",
                 template="plotly_white",
             )
-            st.plotly_chart(fig_vario, use_container_width=True)
+            st.plotly_chart(fig_vario, width="stretch")
 
     else:
         st.info("⬅️ Configure os parâmetros na barra lateral e clique em **Gerar Mancha de Precipitação**.")
@@ -851,7 +851,7 @@ with tab3:
             data=gdf_mun,
             style_function=lambda _: {"fillColor": "#e3f2fd", "color": "#1a237e", "weight": 2},
         ).add_to(mapa_vazio)
-        st_folium(mapa_vazio, use_container_width=True, height=500)
+        st_folium(mapa_vazio, width="stretch", height=500)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ABA 4 — PREVISÃO COM PROPHET
@@ -911,15 +911,16 @@ with tab4:
         forecast, df_hist_prophet, coluna,
         f"{emoji} Previsão de {variavel_ml} — {cidade_selecionada} ({meses_previsao} meses à frente)"
     )
-    st.plotly_chart(fig_forecast, use_container_width=True)
+    st.plotly_chart(fig_forecast, width="stretch")
 
     # ── Componentes do modelo (sazonalidade e tendência) ──────────────────────
     st.markdown("### 🔍 Decomposição do Modelo (Componentes)")
-    fig_comp, axes = plt.subplots(2, 1, figsize=(12, 6))
-    modelo.plot_components(forecast, ax=axes)
+    # plot_components() cria e retorna sua própria figura — não aceita ax= externo
+    fig_comp = modelo.plot_components(forecast)
+    fig_comp.set_size_inches(12, 6)
     plt.tight_layout()
-    st.pyplot(fig_comp, use_container_width=True)
-    plt.close()
+    st.pyplot(fig_comp, width="stretch")
+    plt.close(fig_comp)
 
     # ── Tabela de previsões futuras ────────────────────────────────────────────
     st.markdown("### 📅 Tabela de Previsões Futuras")
@@ -934,7 +935,7 @@ with tab4:
             "Limite Inferior (80%)": "{:.2f}",
             "Limite Superior (80%)": "{:.2f}",
         }),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
